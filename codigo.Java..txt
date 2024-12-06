@@ -1,0 +1,150 @@
+import java.util.*;
+
+// Clase base Producto
+abstract class Producto {
+    protected String id;
+    protected String nombre;
+    protected String precio;
+
+    public Producto(String id, String nombre, String precio) {
+        this.id = id;
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    public abstract Producto clonar();
+}
+
+// Subclase Accesorios
+class Accesorios extends Producto {
+    private String disenador;
+    private Date fechaElaboracion;
+    private String marca;
+
+    public Accesorios(String id, String nombre, String precio, String disenador, Date fechaElaboracion, String marca) {
+        super(id, nombre, precio);
+        this.disenador = disenador;
+        this.fechaElaboracion = fechaElaboracion;
+        this.marca = marca;
+    }
+
+    @Override
+    public Producto clonar() {
+        return new Accesorios(id, nombre, precio, disenador, fechaElaboracion, marca);
+    }
+}
+
+// Subclase Calzado
+class Calzado extends Producto {
+    private String capellada;
+    private String suela;
+    private String cierre;
+
+    public Calzado(String id, String nombre, String precio, String capellada, String suela, String cierre) {
+        super(id, nombre, precio);
+        this.capellada = capellada;
+        this.suela = suela;
+        this.cierre = cierre;
+    }
+
+    @Override
+    public Producto clonar() {
+        return new Calzado(id, nombre, precio, capellada, suela, cierre);
+    }
+}
+
+// Subclase Ropa
+class Ropa extends Producto {
+    private String color;
+    private String tela;
+    private String talla;
+    private String marca;
+
+    public Ropa(String id, String nombre, String precio, String color, String tela, String talla, String marca) {
+        super(id, nombre, precio);
+        this.color = color;
+        this.tela = tela;
+        this.talla = talla;
+        this.marca = marca;
+    }
+
+    @Override
+    public Producto clonar() {
+        return new Ropa(id, nombre, precio, color, tela, talla, marca);
+    }
+}
+
+// Clase Pedido
+class Pedido {
+    private String id;
+    private List<Producto> productos;
+    private EstadoPedido estado;
+
+    public Pedido(String id, EstadoPedido estado) {
+        this.id = id;
+        this.estado = estado;
+        this.productos = new ArrayList<>();
+    }
+
+    public void agregarProducto(Producto producto) {
+        productos.add(producto);
+    }
+
+    public double calcularTotal() {
+        return productos.stream().mapToDouble(p -> Double.parseDouble(p.precio)).sum();
+    }
+}
+
+// Clase AdministradorPedidos
+class AdministradorPedidos {
+    private static final AdministradorPedidos instancia = new AdministradorPedidos();
+    private List<Pedido> pedidos = new ArrayList<>();
+
+    private AdministradorPedidos() {}
+
+    public static AdministradorPedidos getInstancia() {
+        return instancia;
+    }
+
+    public void agregarPedido(Pedido pedido) {
+        pedidos.add(pedido);
+    }
+
+    public Pedido obtenerPedido(String id) {
+        return pedidos.stream().filter(p -> p.id.equals(id)).findFirst().orElse(null);
+    }
+}
+
+// Enum EstadoPedido
+enum EstadoPedido {
+    EN_PROCESO,
+    PROCESADO,
+    ENVIADO,
+    ENTREGADO
+}
+
+// Clase Factory Simplificada
+abstract class ProductoFactory {
+    public abstract Producto crearProducto();
+}
+
+class RopaFactory extends ProductoFactory {
+    @Override
+    public Producto crearProducto() {
+        return new Ropa("1", "Camisa", "20.0", "Rojo", "Algodon", "M", "Nike");
+    }
+}
+
+class AccesorioFactory extends ProductoFactory {
+    @Override
+    public Producto crearProducto() {
+        return new Accesorios("2", "Collar", "15.0", "Juan Perez", new Date(), "Gucci");
+    }
+}
+
+class CalzadoFactory extends ProductoFactory {
+    @Override
+    public Producto crearProducto() {
+        return new Calzado("3", "Zapatos", "50.0", "Cuero", "Caucho", "Cordones");
+    }
+}
