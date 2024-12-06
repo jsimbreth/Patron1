@@ -1,0 +1,200 @@
+from abc import ABC, abstractmethod
+from enum import Enum
+
+
+# EstadoPedido (Enum)
+class EstadoPedido(Enum):
+    EN_PROCESO = "En Proceso"
+    PROCESADO = "Procesado"
+    ENVIADO = "Enviado"
+    ENTREGADO = "Entregado"
+
+
+# Producto (Abstracta)
+class Producto(ABC):
+    def __init__(self, id, nombre, precio):
+        self.id = id
+        self.nombre = nombre
+        self.precio = precio
+
+    @abstractmethod
+    def clonar(self):
+        pass
+
+
+# Ropa
+class Ropa(Producto):
+    def __init__(self, id, nombre, precio, color, tela, talla, marca):
+        super().__init__(id, nombre, precio)
+        self.color = color
+        self.tela = tela
+        self.talla = talla
+        self.marca = marca
+
+    def clonar(self):
+        return Ropa(self.id, self.nombre, self.precio, self.color, self.tela, self.talla, self.marca)
+
+
+# Accesorio
+class Accesorio(Producto):
+    def __init__(self, id, nombre, precio, diseñador, fecha_elaboracion, material):
+        super().__init__(id, nombre, precio)
+        self.diseñador = diseñador
+        self.fecha_elaboracion = fecha_elaboracion
+        self.material = material
+
+    def clonar(self):
+        return Accesorio(self.id, self.nombre, self.precio, self.diseñador, self.fecha_elaboracion, self.material)
+
+
+# Calzado
+class Calzado(Producto):
+    def __init__(self, id, nombre, precio, capellada, suela, cierre):
+        super().__init__(id, nombre, precio)
+        self.capellada = capellada
+        self.suela = suela
+        self.cierre = cierre
+
+    def clonar(self):
+        return Calzado(self.id, self.nombre, self.precio, self.capellada, self.suela, self.cierre)
+
+
+# Personalización: Telas, Marca, Diseñador, Material
+class Tela:
+    def __init__(self, nombre, material_principal, porcentaje_uso):
+        self.nombre = nombre
+        self.material_principal = material_principal
+        self.porcentaje_uso = porcentaje_uso
+
+
+class Marca:
+    def __init__(self, nombre, pais):
+        self.nombre = nombre
+        self.pais = pais
+
+
+class Diseñador:
+    def __init__(self, nombre, apellido):
+        self.nombre = nombre
+        self.apellido = apellido
+
+
+class Material:
+    def __init__(self, nombre, tipo):
+        self.nombre = nombre
+        self.tipo = tipo  # Enum: Natural, Sintético, Reciclado
+
+
+# ProductoFactory (Abstracta)
+class ProductoFactory(ABC):
+    @abstractmethod
+    def crear_producto(self, id, nombre, precio, **kwargs):
+        pass
+
+
+class RopaFactory(ProductoFactory):
+    def crear_producto(self, id, nombre, precio, color, tela, talla, marca):
+        return Ropa(id, nombre, precio, color, tela, talla, marca)
+
+
+class AccesorioFactory(ProductoFactory):
+    def crear_producto(self, id, nombre, precio, diseñador, fecha_elaboracion, material):
+        return Accesorio(id, nombre, precio, diseñador, fecha_elaboracion, material)
+
+
+class CalzadoFactory(ProductoFactory):
+    def crear_producto(self, id, nombre, precio, capellada, suela, cierre):
+        return Calzado(id, nombre, precio, capellada, suela, cierre)
+
+
+# ProductoBuilder (Abstracta)
+class ProductoBuilder(ABC):
+    @abstractmethod
+    def set_color(self, color):
+        pass
+
+    @abstractmethod
+    def set_material(self, material):
+        pass
+
+    @abstractmethod
+    def build(self):
+        pass
+
+
+class RopaBuilder(ProductoBuilder):
+    def __init__(self):
+        self.producto = None
+
+    def set_color(self, color):
+        self.producto.color = color
+        return self
+
+    def set_material(self, material):
+        self.producto.tela = material
+        return self
+
+    def build(self):
+        return self.producto
+
+
+# AdministradorPedidos (Singleton)
+class AdministradorPedidos:
+    _instancia = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instancia:
+            cls._instancia = super().__new__(cls, *args, **kwargs)
+            cls._instancia.pedidos = []
+        return cls._instancia
+
+    def agregar_pedido(self, pedido):
+        self.pedidos.append(pedido)
+
+    def obtener_pedido(self, id):
+        for pedido in self.pedidos:
+            if pedido.id == id:
+                return pedido
+        return None
+
+
+# Pedido
+class Pedido:
+    def __init__(self, id):
+        self.id = id
+        self.productos = []
+        self.estado = EstadoPedido.EN_PROCESO
+
+    def agregar_producto(self, producto):
+        self.productos.append(producto)
+
+    def calcular_total(self):
+        return sum(p.precio for p in self.productos)
+Uso del sistema
+Crear productos básicos con Factory:
+
+python
+Copiar código
+ropa_factory = RopaFactory()
+camiseta = ropa_factory.crear_producto(
+    id="R1",
+    nombre="Camiseta personalizada",
+    precio=15.99,
+    color="Rojo",
+    tela=Tela("Algodón", "Natural", 100),
+    talla="M",
+    marca=Marca("CustomBrand", "España")
+)
+Clonar un producto (Prototype):
+
+python
+Copiar código
+camiseta_clon = camiseta.clonar()
+Crear pedidos y gestionarlos (Singleton):
+
+python
+Copiar código
+admin_pedidos = AdministradorPedidos()
+pedido = Pedido(id="P1")
+pedido.agregar_producto(camiseta)
+admin_pedidos.agregar_pedido(pedido)
